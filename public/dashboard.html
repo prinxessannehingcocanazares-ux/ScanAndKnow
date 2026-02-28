@@ -736,6 +736,7 @@ async function loadReports() {
 }
 
 </script>
+<script>
 document.querySelectorAll('.sidebar ul li').forEach(li => {
     li.addEventListener('click', () => {
         const text = li.textContent.trim();
@@ -748,5 +749,6 @@ document.querySelectorAll('.sidebar ul li').forEach(li => {
         else if(text === "Teacher Reports") loadReports();
     });
 });
+</script>
 </body>
 </html>
