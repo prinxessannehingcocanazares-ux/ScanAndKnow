@@ -1,0 +1,161 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign Up - Scan and Know</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+/* ===== Same style as homepage ===== */
+* { margin:0; padding:0; box-sizing:border-box; font-family: Arial, sans-serif; }
+body { background:#f8f9fa; color:#1a1a2e; min-height:100vh; display:flex; flex-direction:column; }
+
+/* Navbar */
+nav { display:flex; justify-content:flex-end; align-items:center; padding:30px 50px; position:relative; flex-wrap:wrap; }
+nav .logo { position:absolute; left:50px; font-weight:bold; font-size:1.5rem; color:#1a1a2e; }
+nav ul { list-style:none; display:flex; gap:40px; flex-wrap:wrap; }
+nav ul li a { text-decoration:none; color:#1a1a2e; font-weight:600; }
+nav ul li a:hover { color:#fdbf2d; }
+
+/* Hero/Form Section */
+.hero { flex:1; display:flex; justify-content:center; align-items:flex-start; padding:60px 20px; position:relative; overflow:hidden; }
+
+/* Shapes */
+.shape { position:absolute; border-radius:0; z-index:1; }
+.shape.yellow1 { width:200px; height:50px; background:#fdbf2d; transform:rotate(45deg); top:60px; right:150px; }
+.shape.yellow2 { width:150px; height:40px; background:#fdbf2d; transform:rotate(-30deg); bottom:50px; left:100px; }
+.shape.navy1 { width:250px; height:80px; background:#1a1a2e; transform:rotate(20deg); top:20px; right:50px; }
+.shape.navy2 { width:150px; height:60px; background:#1a1a2e; transform:rotate(-15deg); bottom:80px; left:200px; }
+
+/* Form container */
+.form-container { width:100%; max-width:500px; padding:40px; background:#fff; border-radius:15px; box-shadow:0 10px 25px rgba(0,0,0,0.1); opacity:0; transform:translateY(30px); animation:fadeSlideIn 0.8s forwards; position:relative; z-index:2; }
+.form-container h1 { text-align:center; margin-bottom:25px; }
+
+/* Inputs & Buttons */
+label { font-weight:600; display:block; margin-bottom:5px; }
+input, select { width:100%; padding:12px; margin-bottom:15px; border-radius:8px; border:1px solid #ccc; font-size:1rem; }
+input:focus { outline:none; border-color:#fdbf2d; box-shadow:0 0 5px rgba(253,191,45,0.5);}
+button { width:100%; padding:12px; background:#fdbf2d; border:none; border-radius:8px; font-weight:bold; cursor:pointer; transition:0.3s; }
+button:hover { background:#e0ac1c; transform:scale(1.02); }
+
+/* Animation */
+@keyframes fadeSlideIn { to { opacity:1; transform:translateY(0); } }
+
+/* Footer */
+footer { text-align:center; padding:20px; color:#555; margin-top:20px; }
+
+/* Responsive */
+@media(max-width:768px){ nav ul { gap:20px; } .form-container { padding:30px; } }
+@media(max-width:480px){ nav ul { flex-direction:column; align-items:flex-end; gap:10px; } nav .logo { font-size:1.3rem; left:15px; } .form-container { padding:25px; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Snow</div>
+  <ul>
+    <li><a href="Home.html">Home</a></li>
+    <li><a href="about.html">About Us</a></li>
+    <li><a href="signup.html">Sign Up</a></li>
+    <li><a href="login.html">Login</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <!-- Shapes like homepage -->
+  <div class="shape yellow1"></div>
+  <div class="shape yellow2"></div>
+  <div class="shape navy1"></div>
+  <div class="shape navy2"></div>
+
+  <div class="form-container">
+    <h1>Create Account</h1>
+
+    <!-- STEP 1 -->
+    <label>Full Name</label>
+    <input id="fullName" placeholder="Full Name">
+    <label>Email</label>
+    <input id="email" type="email" placeholder="Email">
+    <label>Contact Number</label>
+    <input id="contact" placeholder="Contact Number">
+    <button onclick="showStep2()">Next</button>
+
+    <!-- STEP 2 -->
+    <div id="step2" style="display:none; margin-top:20px;">
+      <label>Department</label>
+      <select id="department">
+        <option value="">Select Faculty</option>
+        <option>College of Arts and Sciences</option>
+        <option>College of Business Administration and Accountancy</option>
+        <option>College of Teacher Education</option>
+        <option>College of Engineering</option>
+        <option>College of Computer Studies</option>
+        <option>College of Criminal Justice Education</option>
+        <option>College of Information Technology</option>
+        <option>College of Nursing and Allied Health</option>
+        <option>College of Hospitality Management and Tourism</option>
+      </select>
+      <label>Position</label>
+      <input id="position" placeholder="Position">
+      <label>Password</label>
+      <input id="password" type="password" placeholder="Password">
+      <label>Confirm Password</label>
+      <input id="confirmPassword" type="password" placeholder="Confirm Password">
+      <button id="createBtn" onclick="registerTeacher()">Create Account</button>
+    </div>
+  </div>
+</section>
+
+<footer>© 2025 Scan and Know. All rights reserved.</footer>
+
+<script>
+function showStep2(){
+    const fullName = document.getElementById("fullName").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const contact = document.getElementById("contact").value.trim();
+    if (!fullName || !email || !contact) { alert("Please fill all fields in Step 1"); return; }
+    document.getElementById("step2").style.display = "block";
+    document.getElementById("step2").scrollIntoView({behavior:"smooth"});
+}
+
+// Firebase Init
+const firebaseConfig = {
+    apiKey: "AIzaSyBAG2Hr3l39IUWMZb9J6VoJmAgHqo1quLM",
+    authDomain: "scanandknow-14d98.firebaseapp.com",
+    projectId: "scanandknow-14d98",
+    storageBucket: "scanandknow-14d98.appspot.com",
+    messagingSenderId: "572867739400",
+    appId: "1:572867739400:web:72fe1a6981418ca6fd76bd"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+async function registerTeacher() {
+    const btn = document.getElementById("createBtn"); btn.disabled = true;
+    const fullName = document.getElementById("fullName").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const contact = document.getElementById("contact").value.trim();
+    const department = document.getElementById("department").value.trim();
+    const position = document.getElementById("position").value.trim();
+    const password = document.getElementById("password").value;
+    const confirm = document.getElementById("confirmPassword").value;
+    if (!fullName || !email || !contact || !department || !position || !password || !confirm) { alert("Please fill all fields in Step 2"); btn.disabled = false; return; }
+    if (password !== confirm) { alert("Passwords do not match"); btn.disabled = false; return; }
+
+    try {
+        const cred = await auth.createUserWithEmailAndPassword(email,password);
+        await cred.user.updateProfile({displayName:fullName});
+        await db.collection("teachers").doc(cred.user.uid).set({fullName,email,contact,department,position,role:"teacher",createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+        alert("Account created successfully!"); window.location.href="dashboard.html";
+    } catch(error) { alert("Signup Error: "+error.message); btn.disabled=false; }
+}
+</script>
+
+</body>
+</html>

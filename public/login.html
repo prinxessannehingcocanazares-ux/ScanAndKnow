@@ -1,0 +1,119 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Scan and Know</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+/* ===== Same style as homepage ===== */
+* { margin:0; padding:0; box-sizing:border-box; font-family: Arial, sans-serif; }
+body { background:#f8f9fa; color:#1a1a2e; min-height:100vh; display:flex; flex-direction:column; }
+
+/* Navbar */
+nav { display:flex; justify-content:flex-end; align-items:center; padding:30px 50px; position:relative; flex-wrap:wrap; }
+nav .logo { position:absolute; left:50px; font-weight:bold; font-size:1.5rem; color:#1a1a2e; }
+nav ul { list-style:none; display:flex; gap:40px; flex-wrap:wrap; }
+nav ul li a { text-decoration:none; color:#1a1a2e; font-weight:600; }
+nav ul li a:hover { color:#fdbf2d; }
+
+/* Hero/Form Section */
+.hero { flex:1; display:flex; justify-content:center; align-items:center; padding:60px 20px; position:relative; overflow:hidden; }
+
+/* Shapes */
+.shape { position:absolute; border-radius:0; z-index:1; }
+.shape.yellow1 { width:200px; height:50px; background:#fdbf2d; transform:rotate(45deg); top:60px; right:150px; }
+.shape.yellow2 { width:150px; height:40px; background:#fdbf2d; transform:rotate(-30deg); bottom:50px; left:100px; }
+.shape.navy1 { width:250px; height:80px; background:#1a1a2e; transform:rotate(20deg); top:20px; right:50px; }
+.shape.navy2 { width:150px; height:60px; background:#1a1a2e; transform:rotate(-15deg); bottom:80px; left:200px; }
+
+/* Form container */
+.form-container { width:100%; max-width:400px; padding:40px; background:#fff; border-radius:15px; box-shadow:0 10px 25px rgba(0,0,0,0.1); opacity:0; transform:translateY(30px); animation:fadeSlideIn 0.8s forwards; position:relative; z-index:2; }
+.form-container h1 { text-align:center; margin-bottom:25px; }
+
+/* Inputs & Buttons */
+label { font-weight:600; display:block; margin-bottom:5px; }
+input { width:100%; padding:12px; margin-bottom:15px; border-radius:8px; border:1px solid #ccc; font-size:1rem; }
+input:focus { outline:none; border-color:#fdbf2d; box-shadow:0 0 5px rgba(253,191,45,0.5);}
+button { width:100%; padding:12px; background:#fdbf2d; border:none; border-radius:8px; font-weight:bold; cursor:pointer; transition:0.3s; }
+button:hover { background:#e0ac1c; transform:scale(1.02); }
+
+/* Animation */
+@keyframes fadeSlideIn { to { opacity:1; transform:translateY(0); } }
+
+/* Footer */
+footer { text-align:center; padding:20px; color:#555; margin-top:20px; }
+
+/* Responsive */
+@media(max-width:768px){ nav ul { gap:20px; } .form-container { padding:30px; } }
+@media(max-width:480px){ nav ul { flex-direction:column; align-items:flex-end; gap:10px; } nav .logo { font-size:1.3rem; left:15px; } .form-container { padding:25px; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Snow</div>
+  <ul>
+    <li><a href="Home.html">Home</a></li>
+    <li><a href="about.html">About Us</a></li>
+    <li><a href="signup.html">Sign Up</a></li>
+    <li><a href="login.html">Login</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <!-- Shapes like homepage -->
+  <div class="shape yellow1"></div>
+  <div class="shape yellow2"></div>
+  <div class="shape navy1"></div>
+  <div class="shape navy2"></div>
+
+  <div class="form-container">
+    <h1>Login</h1>
+    <label for="loginEmail">Email</label>
+    <input type="email" id="loginEmail" placeholder="Email">
+    <label for="loginPassword">Password</label>
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button type="button" onclick="loginBtn()">Log In</button>
+  </div>
+</section>
+
+<footer>© 2025 Scan and Know. All rights reserved.</footer>
+
+<script>
+// Firebase Init
+const firebaseConfig = {
+    apiKey: "AIzaSyBAG2Hr3l39IUWMZb9J6VoJmAgHqo1quLM",
+    authDomain: "scanandknow-14d98.firebaseapp.com",
+    projectId: "scanandknow-14d98",
+    storageBucket: "scanandknow-14d98.appspot.com",
+    messagingSenderId: "572867739400",
+    appId: "1:572867739400:web:72fe1a6981418ca6fd76bd"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// LOGIN
+async function loginBtn() {
+    const email = document.getElementById("loginEmail").value;
+    const password = document.getElementById("loginPassword").value;
+    try {
+        await auth.signInWithEmailAndPassword(email, password);
+        window.location.href = "dashboard.html";
+    } catch (error) {
+        alert("Login Error: " + error.message);
+    }
+}
+
+// Redirect if already logged in
+auth.onAuthStateChanged(user => { if (user) window.location.href = "dashboard.html"; });
+</script>
+
+</body>
+</html>

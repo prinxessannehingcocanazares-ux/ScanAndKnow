@@ -1,0 +1,98 @@
+﻿<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Room 11 — Scan and Know</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:2rem;background:#f7fafc}
+    .card{max-width:520px;margin:1rem auto;padding:1.6rem;border-radius:12px;background:#fff;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+    h1{margin:0 0 .5rem;font-size:1.25rem}
+    .status{font-size:2rem;margin-top:.5rem}
+    .occupied{color:#c53030}
+    .available{color:#2f855a}
+    .meta{margin-top:.5rem;color:#555}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1 id="room-name">Room RM11</h1>
+    <div id="status" class="status">Loading…</div>
+    <div id="meta" class="meta"></div>
+  </div>
+
+  <!-- Firebase modular SDK (placed before </body>) -->
+  <script type="module">
+    // ——— REPLACE NOTHING ABOVE THIS LINE UNLESS YOU KNOW WHAT IT DOES ———
+
+    // Imports from Firebase v12 (modular)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { getFirestore, doc, onSnapshot, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+    // ---- PASTE your firebaseConfig BELOW (you already have one) ----
+    const firebaseConfig = {
+      apiKey: "AIzaSyBAG2Hr3l39IUWMZb9J6VoJmAgHqo1quLM",
+      authDomain: "scanandknow-14d98.firebaseapp.com",
+      projectId: "scanandknow-14d98",
+      storageBucket: "scanandknow-14d98.firebasestorage.app",
+      messagingSenderId: "572867739400",
+      appId: "1:572867739400:web:72fe1a6981418ca6fd76bd"
+    };
+    // ---- end config ----
+
+    // Init
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    console.log("Firebase Connected ✔");
+
+    // Read room id from query param ?room=RM11 or default RM11
+    const params = new URLSearchParams(location.search);
+    const roomId = (params.get('room') || params.get('r') || 'RM11').toString();
+
+    // UI refs
+    const roomNameEl = document.getElementById('room-name');
+    const statusEl = document.getElementById('status');
+    const metaEl = document.getElementById('meta');
+
+    roomNameEl.textContent = `Room ${roomId}`;
+
+    // Firestore document reference (collection: rooms, doc id: e.g. RM11)
+    const roomRef = doc(db, 'rooms', roomId);
+
+    // Real-time listener
+    const unsub = onSnapshot(roomRef, (snap) => {
+      if (!snap.exists()) {
+        statusEl.textContent = 'No data';
+        statusEl.className = 'status';
+        metaEl.textContent = 'Room document not found in Firestore.';
+        return;
+      }
+      const data = snap.data();
+      const s = (data.status || 'Available').toLowerCase();
+      statusEl.textContent = data.status || 'Available';
+      statusEl.className = 'status ' + (s === 'occupied' || s === 'in use' ? 'occupied' : 'available');
+      metaEl.textContent = data.lastUpdated ? `Last: ${new Date(data.lastUpdated.seconds ? data.lastUpdated.seconds*1000 : data.lastUpdated).toLocaleString()}` : (data.currentUser ? `User: ${data.currentUser}` : '');
+    }, (err) => {
+      statusEl.textContent = 'Error';
+      metaEl.textContent = err.message;
+    });
+
+    // Optional: helper to set status (for manual testing)
+    // Use the browser console: setStatus('Occupied') or setStatus('Available')
+    window.setStatus = async function(newStatus){
+      try {
+        await setDoc(roomRef, {
+          status: newStatus,
+          lastUpdated: serverTimestamp(),
+          currentUser: "ManualTest"
+        }, { merge: true });
+        console.log('Status updated to', newStatus);
+      } catch(e){
+        console.error(e);
+      }
+    };
+
+    // ——— DO NOT REMOVE: end of module script ———
+  </script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About Us - Scan and Know</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family: Arial, sans-serif; }
+body { background-color:#f8f9fa; color:#1a1a2e; min-height:100vh; }
+
+nav { display:flex; justify-content:flex-end; align-items:center; padding:30px 50px; position:relative; z-index:2; }
+nav .logo { position:absolute; left:50px; font-weight:bold; font-size:1.5rem; color:#1a1a2e; }
+nav ul { list-style:none; display:flex; gap:40px; }
+nav ul li a { text-decoration:none; color:#1a1a2e; font-weight:600; transition:0.3s; }
+nav ul li a:hover { color:#fdbf2d; }
+
+.hero { position: relative; padding-top:100px; display:flex; justify-content:center; flex-direction:column; align-items:center; overflow:hidden; }
+
+.shape { position:absolute; z-index:0; }
+.shape.yellow1 { width:200px; height:50px; background-color:#fdbf2d; transform:rotate(45deg); top:50px; right:150px; }
+.shape.navy1 { width:250px; height:80px; background-color:#1a1a2e; transform:rotate(20deg); top:20px; left:40px; }
+
+.team-section { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-top:50px; z-index:1; position:relative; }
+
+.card { background:#fff; width:250px; padding:25px; border-radius:20px; text-align:center; box-shadow:0 5px 15px rgba(0,0,0,0.15); transition: transform 0.3s, box-shadow 0.3s; }
+.card:hover { transform: translateY(-10px) scale(1.05); box-shadow:0 10px 20px rgba(0,0,0,0.2); }
+
+.card img { width:120px; height:120px; border-radius:50%; object-fit:cover; margin-bottom:15px; border:4px solid #3498db; }
+
+.name { font-weight:bold; font-size:18px; color:#1a1a2e; }
+.role { font-size:14px; color:#444; margin-bottom:10px; }
+
+/* === CONTACT SA LOOB NG CARD === */
+.card-contact {
+    margin-top:10px;
+    text-align:left;
+}
+
+.card-contact div {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:13px;
+    margin-bottom:6px;
+    color:#1a1a2e;
+}
+
+.card-contact img {
+    width:16px;
+    height:16px;
+}
+
+.card-contact a {
+    text-decoration:none;
+    color:#1a1a2e;
+    font-weight:600;
+}
+
+footer { text-align:center; padding:20px; color:#555; margin-top:50px; }
+
+@media(max-width:768px){ 
+    .shape { display:none; }
+    .team-section { margin-top:100px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+    <div class="logo">Scan and Know</div>
+    <ul>
+        <li><a href="Home.html">Home</a></li>
+        <li><a href="about.html">About Us</a></li>
+        <li><a href="signup.html">Sign Up</a></li>
+        <li><a href="login.html">Login</a></li>
+    </ul>
+</nav>
+
+<section class="hero">
+    <div class="shape yellow1"></div>
+    <div class="shape navy1"></div>
+
+    <div class="team-section">
+
+        <!-- DEVELOPER CARD -->
+        <div class="card">    
+            <img src="images/princess.jpg" alt="Princess Anne Photo">
+            <div class="name">Princess Anne H. Cañazares</div>
+            <div class="role">Developer / Programmer</div>
+
+            <div class="card-contact">
+                <div>
+                    <img src="images/FacebookLogo.jpg">
+                    <a href="https://www.facebook.com/share/1EJk1Bvaia/" target="_blank">Scan and Know</a>
+                </div>
+                <div>
+                    <img src="images/emailLogo.jpg">
+                    <span>scanandknow@gmail.com</span>
+                </div>
+                <div>
+                    <img src="images/phone.png">
+                    <span>09276968065</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- DESIGNER CARD -->
+        <div class="card">
+            <img src="images/melvin.jpg" alt="Melvin Photo">
+            <div class="name">Melvin M. Villaseran</div>
+            <div class="role">Designer</div>
+
+            <div class="card-contact">
+                <div>
+                    <img src="images/FacebookLogo.jpg">
+                    <a href="https://www.facebook.com/share/1LnjjfR5fp/" target="_blank">Scan and Know</a>
+                </div>
+                <div>
+                    <img src="images/emailLogo.jpg">
+                    <span>scanandknow@gmail.com</span>
+                </div>
+                <div>
+                    <img src="images/phone.png">
+                    <span>0912 345 6789</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<footer>© 2025 Scan and Know. All rights reserved.</footer>
+
+</body>
+</html>

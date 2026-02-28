@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "scanandknow-14d98",
+    "firebase use --add": "fir-demo-project"
+  },
+  "targets": {},
+  "etags": {}
+}

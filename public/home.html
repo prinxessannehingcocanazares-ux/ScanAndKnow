@@ -1,0 +1,76 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scan and Know - Home</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family: 'Arial', sans-serif; }
+body { background-color: #f8f9fa; color: #1a1a2e; }
+
+/* Navbar */
+nav { display:flex; justify-content:flex-end; align-items:center; padding:30px 50px; position:relative; }
+nav .logo { position:absolute; left:50px; font-weight:bold; font-size:1.5rem; color:#1a1a2e; }
+nav ul { list-style:none; display:flex; gap:40px; }
+nav ul li a { text-decoration:none; color:#1a1a2e; font-weight:600; transition:0.3s; }
+nav ul li a:hover { color:#fdbf2d; }
+
+/* Hero Section */
+.hero { position: relative; height: 80vh; display: flex; justify-content:center; align-items:center; text-align:center; overflow:hidden; }
+.hero h1 { font-size: 2.5rem; font-weight:bold; z-index:2; }
+
+/* Shapes */
+.shape { position:absolute; z-index:1; }
+.shape.yellow1 { width:200px; height:50px; background-color:#fdbf2d; transform:rotate(45deg); top:60px; right:150px; }
+.shape.yellow2 { width:150px; height:40px; background-color:#fdbf2d; transform:rotate(-30deg); bottom:50px; left:100px; }
+.shape.navy1 { width:250px; height:80px; background-color:#1a1a2e; transform:rotate(20deg); top:20px; right:50px; }
+.shape.navy2 { width:150px; height:60px; background-color:#1a1a2e; transform:rotate(-15deg); bottom:80px; left:200px; }
+
+/* Footer */
+footer { text-align:center; padding:20px; font-size:0.9rem; color:#555; }
+
+/* Responsive */
+@media(max-width:768px){
+    nav ul { gap:20px; }
+    .hero h1 { font-size:2rem; }
+    .shape { display:none; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+    <div class="logo">Snow</div>
+    <ul>
+        <li><a href="home.html">Home</a></li>
+        <li><a href="about.html">About Us</a></li>
+        <li><a href="signup.html">Sign Up</a></li>
+        <li><a href="login.html">Login</a></li>
+    </ul>
+</nav>
+
+<section class="hero">
+    <h1>WELCOME TO SCAN AND KNOW</h1>
+    <div class="shape yellow1"></div>
+    <div class="shape yellow2"></div>
+    <div class="shape navy1"></div>
+    <div class="shape navy2"></div>
+</section>
+
+<footer>&copy; 2025 Scan and Know. All rights reserved.</footer>
+
+<!-- Modular Firebase -->
+<script type="module">
+import { auth } from "./firebase.js";
+import { onAuthStateChanged } from "firebase/auth";
+
+// Redirect to dashboard if user already logged in
+onAuthStateChanged(auth, (user) => {
+    if(user){
+        window.location.href = "dashboard.html";
+    }
+});
+</script>
+
+</body>
+</html>

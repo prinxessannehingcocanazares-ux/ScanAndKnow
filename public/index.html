@@ -1,0 +1,722 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard - Scan and Know</title>
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family: Arial, sans-serif; }
+body { background-color:#f8f9fa; color:#1a1a2e; }
+.container { display:flex; min-height:100vh; }
+
+/* Sidebar */
+.sidebar {
+    width:220px;
+    background-color:#1a1a2e;
+    color:#fff;
+    padding:30px 20px;
+    display:flex;
+    flex-direction:column;
+    position: relative; /* Fix for clicks */
+    z-index: 10;        /* Ensure sidebar is on top */
+}
+.sidebar h2 { font-size:1.5rem; margin-bottom:20px; text-align:center; }
+.sidebar ul { list-style:none; padding:0; }
+.sidebar ul li { padding:12px 15px; margin-bottom:10px; cursor:pointer; border-radius:8px; transition:0.3s; }
+.sidebar ul li:hover { background-color:#fdbf2d; color:#1a1a2e; }
+.logout-btn { margin-top:auto; padding:10px; background:#fdbf2d; border:none; border-radius:8px; font-weight:bold; cursor:pointer; }
+
+/* Main content */
+.main-content {
+    flex:1;
+    padding:30px 40px;
+    overflow-x:auto;
+    position: relative; /* Fix for stacking */
+    z-index: 1;
+}
+
+/* Table styling */
+table { width:100%; border-collapse:collapse; margin-top:20px; }
+th, td { border:1px solid #ccc; padding:12px; }
+th { background:#fdbf2d; color:#1a1a2e; }
+
+/* Profile styling */
+.profile-card-container { display:flex; gap:20px; align-items:flex-start; max-width:700px; background:#fff; padding:20px; border-radius:15px; box-shadow:0 5px 15px rgba(0,0,0,0.1); }
+.profile-pic { width:120px; height:120px; border-radius:50%; object-fit:cover; border:2px solid #fdbf2d; cursor:pointer; }
+#editProfileBtn, #saveProfileBtn { padding:8px 16px; background:#fdbf2d; border:none; border-radius:8px; cursor:pointer; font-weight:bold; }
+#editProfileBtn:hover, #saveProfileBtn:hover { background:#e0ac1c; }
+.profile-field { display:flex; flex-direction:column; margin-bottom:12px; }
+.profile-field label { font-weight:600; margin-bottom:5px; }
+.profile-field input, .profile-field select { padding:12px; border-radius:8px; border:1px solid #ccc; width:100%; }
+
+/* Section styling */
+#sectionForm { display:flex; flex-wrap:wrap; gap:15px; background:#fff; padding:20px; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.05); margin-bottom:20px; }
+#sectionForm label { width:100%; font-weight:600; margin-bottom:5px; }
+#sectionForm input { padding:10px; border-radius:8px; border:1px solid #ccc; width:100%; }
+#sectionForm button { padding:10px 15px; background:#fdbf2d; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px; }
+#sectionForm button:hover { background:#e0ac1c; }
+
+/* Weekly Calendar Grid */
+.weekly-calendar {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+}
+
+.weekly-calendar .day-column {
+    background:#fff;
+    border:1px solid #ccc;
+    border-radius:8px;
+    padding:5px;
+    min-height:150px;
+    display:flex;
+    flex-direction:column;
+}
+
+.weekly-calendar .day-column h4 {
+    text-align:center;
+    margin-bottom:5px;
+    font-size:14px;
+    font-weight:bold;
+}
+
+.schedule-entry {
+    background:#fdbf2d;
+    color:#1a1a2e;
+    padding:4px 6px;
+    margin:2px 0;
+    border-radius:5px;
+    font-size:12px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.schedule-entry .buttons button {
+    margin-left:3px;
+    padding:2px 4px;
+    font-size:10px;
+    border:none;
+    border-radius:3px;
+    cursor:pointer;
+}
+
+.schedule-entry .buttons button.edit { background:#1a73e8; color:#fff; }
+.schedule-entry .buttons button.delete { background:#e53935; color:#fff; }
+
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <h2>Snow</h2>
+        <ul>
+            <li onclick="loadDashboard()">Dashboard</li>
+            <li onclick="loadProfile()">Profile</li>
+            <li onclick="loadSection()">Section</li>
+            <li onclick="loadRooms()">Rooms</li>
+            <li onclick="loadAttendance()">Attendance</li>
+            <li onclick="loadQR()">QR Scanner</li>
+            <li onclick="loadReports()">Teacher Reports</li>
+        </ul>
+        <button class="logout-btn" onclick="logoutUser()">Logout</button>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main-content" id="main-content"></main>
+
+</div>
+
+<script>
+// Firebase Init
+const firebaseConfig = {
+    apiKey: "AIzaSyBAG2Hr3l39IUWMZb9J6VoJmAgHqo1quLM",
+    authDomain: "scanandknow-14d98.firebaseapp.com",
+    projectId: "scanandknow-14d98",
+    storageBucket: "scanandknow-14d98.appspot.com",
+    messagingSenderId: "572867739400",
+    appId: "1:572867739400:web:72fe1a6981418ca6fd76bd"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
+const mainContent = document.getElementById("main-content");
+
+// Auth check
+auth.onAuthStateChanged(async (user) => {
+    if (!user) { window.location.href = "login.html"; return; }
+    try {
+        const docRef = db.collection("teachers").doc(user.uid);
+        const docSnap = await docRef.get();
+        if (!docSnap.exists) {
+            await docRef.set({
+                fullName: user.displayName || '',
+                email: user.email || '',
+                contact: '',
+                department: '',
+                position: '',
+                role: 'teacher',
+                photoURL: null,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+        setTimeout(() => loadDashboard(), 200);
+    } catch (err) {
+        console.error("Error initializing profile:", err);
+        mainContent.innerHTML = "<p>Error loading profile.</p>";
+    }
+});
+
+// LOGOUT
+function logoutUser() {
+    auth.signOut();
+    window.location.href = "login.html";
+}
+
+// DASHBOARD
+async function loadDashboard() {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    try {
+        const snap = await db.collection("teachers").doc(user.uid).get();
+        const data = snap.exists ? snap.data() : {};
+        const dept = data.department;
+
+        const departmentRooms = {
+            "CAS": ["CAS Room 101","CAS Room 102","CAS Room 103"],
+            "CBAA": ["CBAA Room 201","CBAA Room 202","CBAA Room 203"],
+            "CTE": ["CTE Room 301","CTE Room 302","CTE Room 303"],
+            "COE": ["COE Room 401","COE Room 402","COE Room 403"],
+            "CCS": ["CCS Room 501","CCS Room 502","CCS Room 503"],
+            "CCJE": ["CCJE Room 601","CCJE Room 602","CCJE Room 603"],
+            "CIT": ["CIT Room 701","CIT Room 702","CIT Room 703"],
+            "CONAH": ["CONAH Room 801","CONAH Room 802","CONAH Room 803"],
+            "CHMT": ["CHMT Room 901","CHMT Room 902","CHMT Room 903"]
+        };
+
+        const rooms = departmentRooms[dept] || [];
+
+        // Build table rows dynamically
+        let tbodyHTML = '';
+        for (const room of rooms) {
+            const roomSnap = await db.collection("rooms").doc(room).get();
+            const status = roomSnap.exists ? roomSnap.data().status : "Available";
+            tbodyHTML += `
+                <tr>
+                    <td>${room}</td>
+                    <td>${status === "Available" ? "✓" : ""}</td>
+                    <td>${status === "Occupied" ? "✓" : ""}</td>
+                    <td>${status}</td>
+                </tr>
+            `;
+        }
+
+        mainContent.innerHTML = `
+            <h1>Dashboard</h1>
+            <h2>Welcome ${data.fullName || 'Teacher'}</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Room</th>
+                        <th>Available</th>
+                        <th>Occupied</th>
+                        <th>Status</th> 
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tbodyHTML}
+                </tbody>
+            </table>
+        `;
+
+    } catch (err) {
+        console.error(err);
+        mainContent.innerHTML = "<p>Error loading dashboard.</p>";
+    }
+}
+
+// PROFILE
+async function loadProfile() {
+    const user = auth.currentUser;
+    if (!user) { mainContent.innerHTML = "<p>User not logged in.</p>"; return; }
+    try {
+        const snap = await db.collection("teachers").doc(user.uid).get();
+        if (!snap.exists) { mainContent.innerHTML = "<p>Profile data not found.</p>"; return; }
+        const data = snap.data();
+
+        mainContent.innerHTML = `
+          <div class="profile-card-container">
+            <img src="${data.photoURL || 'https://via.placeholder.com/120'}" class="profile-pic" id="profilePicDisplay">
+
+            <div style="flex:1; display:flex; flex-direction:column; gap:15px;">
+              <button id="editProfileBtn">Edit Profile</button>
+
+              <div id="profileView">
+                <p><b>Name:</b> ${data.fullName || ''}</p>
+                <p><b>Email:</b> ${data.email || ''}</p>
+                <p><b>Contact:</b> ${data.contact || ''}</p>
+                <p><b>Department:</b> ${data.department || ''}</p>
+                <p><b>Position:</b> ${data.position || ''}</p>
+              </div>
+
+              <div id="profileForm" style="display:none; flex-direction:column; gap:12px;">
+                <div class="profile-field">
+                  <label>Profile Picture</label>
+                  <input type="file" id="profilePicInput" accept="image/*">
+                </div>
+                <div class="profile-field">
+                  <label>Full Name</label>
+                  <input type="text" id="profileFullName" value="${data.fullName || ''}">
+                </div>
+                <div class="profile-field">
+                  <label>Email</label>
+                  <input type="email" id="profileEmail" value="${data.email || ''}">
+                </div>
+                <div class="profile-field">
+                  <label>Contact Number</label>
+                  <input type="text" id="profileContact" value="${data.contact || ''}">
+                </div>
+                <div class="profile-field">
+                  <label>Department</label>
+                  <select id="profileDepartment">
+                    <option value="">Select Department</option>
+                    <option ${data.department==='CAS'?'selected':''}>CAS</option>
+                    <option ${data.department==='CBAA'?'selected':''}>CBAA</option>
+                    <option ${data.department==='CTE'?'selected':''}>CTE</option>
+                    <option ${data.department==='COE'?'selected':''}>COE</option>
+                    <option ${data.department==='CCS'?'selected':''}>CCS</option>
+                    <option ${data.department==='CCJE'?'selected':''}>CCJE</option>
+                    <option ${data.department==='CIT'?'selected':''}>CIT</option>
+                    <option ${data.department==='CONAH'?'selected':''}>CONAH</option>
+                    <option ${data.department==='CHMT'?'selected':''}>CHMT</option>
+                  </select>
+                </div>
+                <div class="profile-field">
+                  <label>Position</label>
+                  <input type="text" id="profilePosition" value="${data.position || ''}">
+                </div>
+                <button id="saveProfileBtn">Save Changes</button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const editBtn = document.getElementById("editProfileBtn");
+        const viewDiv = document.getElementById("profileView");
+        const formDiv = document.getElementById("profileForm");
+        const profilePicDisplay = document.getElementById("profilePicDisplay");
+        const profilePicInput = document.getElementById("profilePicInput");
+        const saveBtn = document.getElementById("saveProfileBtn");
+
+        profilePicInput.addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (ev) { profilePicDisplay.src = ev.target.result; }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        editBtn.addEventListener("click", () => {
+            viewDiv.style.display = "none";
+            formDiv.style.display = "flex";
+            formDiv.scrollIntoView({ behavior: "smooth" });
+        });
+
+        saveBtn.addEventListener("click", async () => {
+            const fullName = document.getElementById("profileFullName").value.trim();
+            const email = document.getElementById("profileEmail").value.trim();
+            const contact = document.getElementById("profileContact").value.trim();
+            const department = document.getElementById("profileDepartment").value.trim();
+            const position = document.getElementById("profilePosition").value.trim();
+
+            if (!fullName || !email || !contact || !department || !position) { 
+                alert("Please fill all fields."); 
+                return; 
+            }
+
+            saveBtn.disabled = true;
+            saveBtn.textContent = "Saving...";
+
+            try {
+                let photoURL = data.photoURL || null;
+                const file = profilePicInput.files[0];
+                if (file) {
+                    const storageRef = firebase.storage().ref(`profile_pictures/${auth.currentUser.uid}`);
+                    await storageRef.put(file);
+                    photoURL = await storageRef.getDownloadURL();
+                }
+
+                await db.collection("teachers").doc(auth.currentUser.uid).update({
+                    fullName, email, contact, department, position, photoURL,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                await auth.currentUser.updateProfile({ displayName: fullName });
+                alert("Profile updated successfully!");
+                loadProfile();
+            } catch (error) {
+                console.error(error);
+                alert("Error updating profile: " + error.message);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = "Save Changes";
+            }
+        });
+
+    } catch (err) { console.error(err); mainContent.innerHTML = "<p>Error loading profile.</p>"; }
+}
+
+// SECTION
+function loadSection(){
+    mainContent.innerHTML=`
+    <h1>Sections</h1>
+    <div id="sectionForm">
+        <div style="flex:1"><label>Date</label><input type="date" id="schedDate"></div>
+        <div style="flex:1"><label>Program</label><input type="text" id="program" placeholder="Enter"></div>
+        <div style="flex:1"><label>Subject</label><input type="text" id="subject" placeholder="Enter"></div>
+        <div style="flex:1"><label>Start Time</label><input type="time" id="timeStart"></div>
+        <div style="flex:1"><label>End Time</label><input type="time" id="timeEnd"></div>
+        <div style="flex-basis:100%"><button id="addScheduleBtn">Add Schedule</button></div>
+    </div>
+    <div id="calendarView" class="weekly-calendar"></div>
+    `;
+
+    const dateInput=document.getElementById("schedDate");
+    const programInput=document.getElementById("program");
+    const subjectInput=document.getElementById("subject");
+    const startInput=document.getElementById("timeStart");
+    const endInput=document.getElementById("timeEnd");
+    const addBtn=document.getElementById("addScheduleBtn");
+    const calendar=document.getElementById("calendarView"); 
+
+    const weekdays=['Monday','Tuesday','Wednesday','Thursday','Friday'];
+    let schedules=JSON.parse(localStorage.getItem('schedules')||'[]');
+
+    function formatTime12Hr(timeStr){
+        const [hour,minute]=timeStr.split(':').map(Number);
+        const ampm=hour>=12?'PM':'AM';
+        const h12=hour%12===0?12:hour%12;
+        return `${h12}:${minute.toString().padStart(2,'0')} ${ampm}`;
+    }
+
+    function renderWeeklyCalendar(){
+        calendar.innerHTML='';
+        const dayColumns=weekdays.map(day=>{
+            const col=document.createElement('div'); col.className='day-column'; col.innerHTML=`<h4>${day}</h4>`;
+            calendar.appendChild(col);
+            return col;
+        });
+
+        schedules.forEach((sch,index)=>{
+            const dateObj=new Date(sch.date);
+            const dayIndex=dateObj.getDay()-1; // Monday=0
+            if(dayIndex<0 || dayIndex>4) return;
+            const entry=document.createElement('div'); entry.className='schedule-entry';
+            entry.innerHTML=`
+                <div class="entry-text">
+                    <div><b>Date:</b> ${sch.date}</div>
+                    <div>${sch.program} | ${sch.subject}</div>
+                    <div>${formatTime12Hr(sch.start)} - ${formatTime12Hr(sch.end)}</div>
+                </div>
+                <div class="buttons">
+                    <button class="edit" onclick="editSchedule(${index})">Edit</button>
+                    <button class="delete" onclick="deleteSchedule(${index})">Delete</button>
+                </div>`;
+            dayColumns[dayIndex].appendChild(entry);
+        });
+        localStorage.setItem('schedules',JSON.stringify(schedules));
+    }
+
+    window.editSchedule=function(index){
+        const sch=schedules[index];
+        dateInput.value=sch.date; programInput.value=sch.program; subjectInput.value=sch.subject;
+        startInput.value=sch.start; endInput.value=sch.end;
+        schedules.splice(index,1); renderWeeklyCalendar();
+    }
+
+    window.deleteSchedule=function(index){
+        if(confirm("Delete this schedule?")){
+            schedules.splice(index,1); renderWeeklyCalendar();
+        }
+    }
+
+    addBtn.addEventListener("click",()=>{
+        if(!dateInput.value||!programInput.value||!subjectInput.value||!startInput.value||!endInput.value){
+            alert("Fill all fields!"); return;
+        }
+        schedules.push({date:dateInput.value ,program:programInput.value ,subject:subjectInput.value ,start:startInput.value ,end:endInput.value });
+        renderWeeklyCalendar();
+        dateInput.value=programInput.value=subjectInput.value=startInput.value=endInput.value='';
+    });
+
+    renderWeeklyCalendar();
+}
+
+// ROOMS
+async function loadRooms() {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const snap = await db.collection("teachers").doc(user.uid).get();
+    const teacher = snap.data();
+    const dept = teacher.department;
+
+    const departmentRooms = {
+        "CAS": ["CAS Room 101","CAS Room 102","CAS Room 103"],
+        "CBAA": ["CBAA Room 201","CBAA Room 202","CBAA Room 203"],
+        "CTE": ["CTE Room 301","CTE Room 302","CTE Room 303"],
+        "COE": ["COE Room 401","COE Room 402","COE Room 403"],
+        "CCS": ["CCS Room 501","CCS Room 502","CCS Room 503"],
+        "CCJE": ["CCJE Room 601","CCJE Room 602","CCJE Room 603"],
+        "CIT": ["CIT Room 701","CIT Room 702","CIT Room 703"],
+        "CONAH": ["CONAH Room 801","CONAH Room 802","CONAH Room 803"],
+        "CHMT": ["CHMT Room 901","CHMT Room 902","CHMT Room 903"]
+    };
+
+    const rooms = departmentRooms[dept] || [];
+
+    const containerDiv = document.createElement("div");
+    containerDiv.style.background = "#fff";
+    containerDiv.style.padding = "20px";
+    containerDiv.style.borderRadius = "12px";
+    containerDiv.style.boxShadow = "0 5px 15px rgba(0,0,0,0.08)";
+    containerDiv.style.marginTop = "20px";
+    containerDiv.style.position = "relative"; // fix stacking
+
+    const table = document.createElement("table");
+    table.style.width = "100%";
+    table.style.borderCollapse = "collapse";
+
+    const thead = document.createElement("thead");
+    thead.innerHTML = `
+        <tr>
+            <th>Room</th>
+            <th>Available</th>
+            <th>Occupied</th>
+            <th>Status</th>
+        </tr>
+    `;
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+
+    for (const room of rooms) {
+        const tr = document.createElement("tr");
+        const roomSnap = await db.collection("rooms").doc(room).get();
+        const status = roomSnap.exists ? roomSnap.data().status : "Available";
+
+        tr.innerHTML = `
+            <td>${room}</td>
+            <td>
+                <button data-room="${room}" data-status="Available" style="background:#27ae60;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;">Available</button>
+            </td>
+            <td>
+                <button data-room="${room}" data-status="Occupied" style="background:#e74c3c;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;">Occupied</button>
+            </td>
+            <td id="status-${room}">${status}</td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    table.appendChild(tbody);
+    containerDiv.appendChild(table);
+
+    mainContent.innerHTML = `<h1>${dept} Building Rooms</h1>`;
+    mainContent.appendChild(containerDiv);
+
+    tbody.querySelectorAll("button").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const room = btn.dataset.room;
+            const status = btn.dataset.status;
+            await setRoomStatus(room, status);
+        });
+    });
+}
+
+async function setRoomStatus(room, status) {
+    const user = auth.currentUser;
+    if (!user) return;
+    try {
+        await db.collection("rooms").doc(room).set({
+            room: room,
+            status: status,
+            updatedBy: user.uid,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        const statusCell = document.getElementById(`status-${room}`);
+        if (statusCell) statusCell.innerText = status;
+
+        const row = statusCell.parentElement;
+        row.querySelectorAll("button").forEach(btn => btn.style.opacity = "0.6");
+        const activeBtn = row.querySelector(`button[data-status="${status}"]`);
+        if (activeBtn) activeBtn.style.opacity = "1";
+
+    } catch (err) {
+        console.error("Error updating room status:", err);
+        alert("Error updating room status. Try again.");
+    }
+}
+
+// ATTENDANCE
+// REPORTS
+async function loadReports() {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const snap = await db.collection("attendance")
+        .where("teacherId","==",user.uid)
+        .get();
+
+    let html = `
+        <h1>Teacher Yearly Report</h1>
+        <table>
+        <tr>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Room Used</th>
+        </tr>
+    `;
+
+    snap.forEach(doc=>{
+        const d = doc.data();
+        html += `
+            <tr>
+                <td>${d.date}</td>
+                <td>${d.time}</td>
+                <td>${d.room}</td>
+            </tr>
+        `;
+    });
+
+    html += "</table>";
+    mainContent.innerHTML = html;
+}
+
+// QR SCANNER
+let activeRoom = null;
+
+async function loadQR() {
+    mainContent.innerHTML = `
+        <h1>QR Scanner</h1>
+
+        <h3> Scan ROOM QR First</h3>
+        <div id="room-reader" style="width:300px;"></div>
+        <p id="roomResult"></p>
+
+        <hr style="margin:20px 0">
+
+        <h3> Scan YOUR ATTENDANCE QR</h3>
+        <div id="teacher-reader" style="width:300px;"></div>
+        <p id="teacherResult"></p>
+    `;
+
+    const nowData = () => {
+        const now = new Date();
+        return {
+            date: now.toLocaleDateString(),
+            time: now.toLocaleTimeString(),
+            month: now.getMonth()+1,
+            year: now.getFullYear()
+        };
+    };
+
+    // ROOM SCANNER
+    const roomScanner = new Html5Qrcode("room-reader");
+    roomScanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        async (decodedText) => {
+            activeRoom = decodedText;
+
+            await db.collection("rooms").doc(decodedText).set({
+                room: decodedText,
+                status: "Occupied"
+            });
+
+            document.getElementById("roomResult").innerHTML =
+                `✅ Room <b>${decodedText}</b> is now OCCUPIED`;
+
+            roomScanner.stop();
+        }
+    );
+
+    // TEACHER SCANNER
+    const teacherScanner = new Html5Qrcode("teacher-reader");
+    teacherScanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        async (decodedText) => {
+
+            const t = nowData();
+
+            await db.collection("attendance").add({
+                teacherId: auth.currentUser.uid,
+                date: t.date,
+                time: t.time,
+                month: t.month,
+                year: t.year,
+                room: activeRoom || "No Room",
+                status: "Present"
+            });
+
+            document.getElementById("teacherResult").innerHTML =
+                `✅ You are PRESENT today<br>${t.date} ${t.time}`;
+
+            teacherScanner.stop();
+        }
+    );
+}
+
+// REPORTS
+async function loadReports() {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const snap = await db.collection("attendance")
+        .where("teacherId","==",user.uid)
+        .get();
+
+    let html = `
+        <h1>Teacher Yearly Report</h1>
+        <table>
+        <tr>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Room Used</th>
+        </tr>
+    `;
+
+    snap.forEach(doc=>{
+        const d = doc.data();
+        html += `
+            <tr>
+                <td>${d.date}</td>
+                <td>${d.time}</td>
+                <td>${d.room}</td>
+            </tr>
+        `;
+    });
+
+    html += "</table>";
+    mainContent.innerHTML = html;
+}
+
+</script>
+
+</body>
+</html>
