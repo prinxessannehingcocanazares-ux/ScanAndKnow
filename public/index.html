@@ -121,15 +121,15 @@ th { background:#fdbf2d; color:#1a1a2e; }
     <!-- Sidebar -->
     <aside class="sidebar">
         <h2>Snow</h2>
-             <ul>
-                <li>Dashboard</li>
-                <li>Profile</li>
-                <li>Section</li>
-                <li>Rooms</li>
-                <li>Attendance</li>
-                <li>QR Scanner</li>
-                <li>Teacher Reports</li>
-            </ul>
+        <ul>
+            <li onclick="loadDashboard()">Dashboard</li>
+            <li onclick="loadProfile()">Profile</li>
+            <li onclick="loadSection()">Section</li>
+            <li onclick="loadRooms()">Rooms</li>
+            <li onclick="loadAttendance()">Attendance</li>
+            <li onclick="loadQR()">QR Scanner</li>
+            <li onclick="loadReports()">Teacher Reports</li>
+        </ul>
         <button class="logout-btn" onclick="logoutUser()">Logout</button>
     </aside>
 
@@ -179,6 +179,39 @@ auth.onAuthStateChanged(async (user) => {
         mainContent.innerHTML = "<p>Error loading profile.</p>";
     }
 });
+
+async function loadAttendance() {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const snap = await db.collection("attendance")
+        .where("teacherId","==",user.uid)
+        .get();
+
+    let html = `
+        <h1>Monthly Attendance</h1>
+        <table>
+        <tr>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Room Used</th>
+        </tr>
+    `;
+
+    snap.forEach(doc=>{
+        const d = doc.data();
+        html += `
+            <tr>
+                <td>${d.date}</td>
+                <td>${d.status}</td>
+                <td>${d.room}</td>
+            </tr>
+        `;
+    });
+
+    html += "</table>";
+    mainContent.innerHTML = html;
+}
 
 // LOGOUT
 function logoutUser() {
