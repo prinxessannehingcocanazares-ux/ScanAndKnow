@@ -1,4 +1,4 @@
-// 🔥 FIREBASE SETUP
+// 🔥 Firebase ES Module Setup
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
@@ -15,19 +15,11 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
 
 // ==================== SIGN UP ====================
-window.registerTeacher = async () => {
-  const fullName = document.getElementById("fullName").value;
-  const email = document.getElementById("email").value;
-  const contact = document.getElementById("contact").value;
-  const department = document.getElementById("department").value;
-  const position = document.getElementById("position").value;
-  const password = document.getElementById("password").value;
-  const confirm = document.getElementById("confirmPassword").value;
-
+export async function registerTeacher(fullName, email, contact, department, position, password, confirm) {
   if (!fullName || !email || !contact || !department || !position || !password || !confirm) {
     alert("Please fill all fields");
     return;
@@ -52,13 +44,10 @@ window.registerTeacher = async () => {
   } catch (error) {
     alert("Signup Error: " + error.message);
   }
-};
+}
 
 // ==================== LOGIN ====================
-window.loginBtn = async () => {
-  const email = document.getElementById("loginEmail").value;
-  const password = document.getElementById("loginPassword").value;
-
+export async function loginUser(email, password) {
   if (!email || !password) {
     alert("Please fill all fields");
     return;
@@ -70,24 +59,37 @@ window.loginBtn = async () => {
   } catch (error) {
     alert("Login Error: " + error.message);
   }
-};
+}
+
+// ==================== LOGOUT ====================
+export async function logoutUser() {
+  await signOut(auth);
+  window.location.href = "index.html";
+}
+
+// ==================== AUTH STATE ====================
+export function onAuthChange(callback) {
+  onAuthStateChanged(auth, callback);
+}
 
 // ==================== DASHBOARD / PROFILE ====================
-const mainContent = document.getElementById("main-content");
+export async function loadProfile(mainContent) {
+  const user = auth.currentUser;
+  if (!user) return;
+  const snap = await getDoc(doc(db, "teachers", user.uid));
+  const data = snap.data();
 
-onAuthStateChanged(auth, async (user) => {
-  if (!user) return; // Logged out, dashboard.html will handle redirect
-  if (mainContent) loadDashboard(); // only if on dashboard.html
-});
+  mainContent.innerHTML = `
+    <h1>Profile</h1>
+    <p><b>Name:</b> ${data.fullName}</p>
+    <p><b>Email:</b> ${data.email}</p>
+    <p><b>Contact:</b> ${data.contact}</p>
+    <p><b>Department:</b> ${data.department}</p>
+    <p><b>Position:</b> ${data.position}</p>
+  `;
+}
 
-// LOGOUT
-window.logoutUser = async () => {
-  await signOut(auth);
-  window.location.href = "login.html";
-};
-
-// LOAD DASHBOARD TABLE
-window.loadDashboard = () => {
+export function loadDashboard(mainContent) {
   mainContent.innerHTML = `
     <h1>Dashboard</h1>
     <table>
@@ -111,28 +113,4 @@ window.loadDashboard = () => {
       </tbody>
     </table>
   `;
-};
-
-// LOAD TEACHER PROFILE
-window.loadProfile = async () => {
-  const user = auth.currentUser;
-  if (!user) return;
-
-  const snap = await getDoc(doc(db, "teachers", user.uid));
-  const data = snap.data();
-
-  mainContent.innerHTML = `
-    <h1>Profile</h1>
-    <p><b>Name:</b> ${data.fullName}</p>
-    <p><b>Email:</b> ${data.email}</p>
-    <p><b>Contact:</b> ${data.contact}</p>
-    <p><b>Department:</b> ${data.department}</p>
-    <p><b>Position:</b> ${data.position}</p>
-  `;
-};
-
-// Other sections placeholders
-window.loadSection = () => mainContent.innerHTML = `<h1>Sections</h1><p>No section assigned yet.</p>`;
-window.loadRooms = () => mainContent.innerHTML = `<h1>Rooms</h1><p>Room list will appear here.</p>`;
-window.loadAttendance = () => mainContent.innerHTML = `<h1>Attendance</h1><p>Calendar attendance coming soon.</p>`;
-window.loadQR = () => mainContent.innerHTML = `<h1>QR Scanner</h1><p>QR Scanner feature here.</p>`;
+}
