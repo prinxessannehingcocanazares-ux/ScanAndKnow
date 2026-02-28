@@ -736,7 +736,17 @@ async function loadReports() {
 }
 
 </script>
-<script type="module" src="./app.js"></script>
-
+document.querySelectorAll('.sidebar ul li').forEach(li => {
+    li.addEventListener('click', () => {
+        const text = li.textContent.trim();
+        if(text === "Dashboard") loadDashboard();
+        else if(text === "Profile") loadProfile();
+        else if(text === "Section") loadSection();
+        else if(text === "Rooms") loadRooms();
+        else if(text === "Attendance") loadAttendance();
+        else if(text === "QR Scanner") loadQR();
+        else if(text === "Teacher Reports") loadReports();
+    });
+});
 </body>
 </html>
